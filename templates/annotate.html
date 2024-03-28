@@ -699,6 +699,19 @@ function annotateSelectedRectangle() {
           originY: 'top'
         });
 
+        var annotationObject = {
+            annotation: {
+                class: document.getElementById('class-dropdown').value,
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height
+            },
+            object: rect 
+        };
+
+        annotations.push(annotationObject);
+
         canvas.add(rect);
 
                 // ctx.strokeStyle = 'red'; // Set bounding box color
