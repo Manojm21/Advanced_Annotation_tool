@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annotate Image</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.css">
+  <style>
+    /* <style> */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f6f6f6;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    .lower-canvas, .upper-canvas {
+      width: 800px;
+      height: 600px;
+      left: 0px;
+      top: 0px;
+    }
+
+    .class-container,#canvas-container {
+        position: relative;
+        width: 90%;
+        height: 80%;
+        margin-top: 20px;
+        display: block;
+        justify-content: center;
+        align-items: center;
+        /* padding: 10px; */
+        background-color: #fff;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); Add shadow effect */
+    }
+
+    canvas {
+        width: 100%;
+        height: 100%;
+        border: 2px dashed #ccc;
+        cursor: pointer;
+        /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+        /* padding:30px 30px; */
+        object-fit: contain;
+        /* margin-left: 30px; */
+        /* margin-right: 30px; */
+
+    }
+
+    .controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+        padding: 20px;
+        border-radius: 5px;
+        border: 2px dashed #ccc;
+        background-color: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    button,select {
+        padding: 8px 16px;
+        border-radius: 6px;
+        background-color:  rgb(16, 173, 208);
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        outline: none;
+    }
+
+    button:hover {
+        background-color: rgb(41, 207, 244);
+        transform: scale(1.05);
+    }
+
+    .button-used {
+        background-color: rgb(126, 94, 255) !important;
+    }
+
+    .highlight {
+        border: 2px solid rgb(126, 94, 255);
+    }
+
+    .bounding-box {
+        stroke: rgb(16, 173, 208);
+        fill: rgb(16, 173, 208);
+    }
+    h1{
+      color:rgb(16, 173, 208);
+      transition: background-color 0.3s ease, transform 0.3s ease;
+        font-size: 30px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        outline: none;
+    }
+    label{
+      color:rgb(16, 173, 208);
+      transition: background-color 0.3s ease, transform 0.3s ease;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        outline: none;
+    }
+    #reset-class-button {
+        padding: 4px 8px;
+        border-radius: 6px;
+        background-color: transparent;
+        color: rgb(16, 173, 208);
+        border: 2px solid rgb(16, 173, 208);
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        outline: none;
+        margin-left: 10px; /* Adjust margin as needed */
+    }
+
+    #reset-class-button:hover {
+        background-color: rgba(16, 173, 208, 0.1);
+    }
+
+    /* Style for the reset icon */
+    #reset-icon {
+        font-size: 18px;
+        vertical-align: middle;
+       
+    }
+</style>
+</head>
+<body>
+<div style="display: inline-flex; padding: 10px;">
+    <h1>Annotate Image</h1>
+</div>
+<div id="canvas-container">
+    <canvas id="canvas"></canvas>
+    <div class="controls">
+      <label for="class-dropdown" style="padding-right:35px;">Select Class</label>
+      <select id="class-dropdown">
+          <option value="1">server</option>
+          <option value="2">switch</option>
+          <option value="3">firewall</option>
+          <option value="4">workstation</option>
+          <option value="5">controller</option>
+          <option value="6">internet</option>
+          <option value="7">printer</option>
+          <option value="8">other</option>
+          <option value="9">router</option>
+          <option value="10">storage_device</option>
+
+      </select>
+      <input type="text" id="new-class" placeholder="New Class">
+      <button id="add-class-button" onclick="addClass()">Add Class</button>
+      <button id="reset-class-button" onclick="resetAddClass()">
+        <span id="reset-icon">&#8635;</span> <!-- Unicode for refresh icon -->
+      </button>
+      <button id="draw-bounding-box-button" onclick="toggleDrawingMode()">Draw Bounding Box</button>
+      <button id="save-annotation-button" onclick="saveAnnotation()">Save Annotation</button>
+        <!-- <button id="template-match-button" onclick="performTemplateMatching()">Template Match</button> -->
+        <button id="annotate-button" onclick="annotateSelectedRectangle()">Annotate</button>
+
+        <button id="zoom-toggle" onclick="toggleZoom()">Toggle Zoom</button>
+        <button id="delete-annotation-button" onclick="deleteAnnotationsInBox()">Delete Annotation</button>
+        
+    </div>
+  </div>
+</div>
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  <script>
+    var canvas = new fabric.Canvas('canvas', { width: 700, height: 500 });
+    var currentClass = '';
+    var drawingMode = false;
+    var zoomEnabled = false;
+    var zoomFactor = 1; // Track current zoom level
+
+    canvas.on('mouse:wheel', updateObjectCoordinates);
+    canvas.on('mouse:move', updateObjectCoordinates);
+    canvas.on('mouse:up', updateObjectCoordinates);
+    function enableResizing(rect) {
+      console.log("check check ")
+      rect.setControlsVisibility({
+        mt: true,
+        mb: true,
+        ml: true,
+        mr: true,
+        tl: true,
+        tr: true,
+        br: true,
+        bl: true,
+        mtr: false
+      });
+      // Make the object selectable again for resizing
+      rect.selectable = true;
+    
+      canvas.renderAll();
+    }
+
+
+    function resetAddClass() {
+    // Remove all options from the dropdown menu except the default one
+    var classDropdown = document.getElementById('class-dropdown');
+    classDropdown.options.length = 10; // Assuming the first option is the default one
+
+    // Clear the classes stored in localStorage
+    localStorage.removeItem('classes');
+}
+
+
+
+function updateObjectCoordinates() {
+  canvas.getObjects().forEach(function(object) {
+    if (object.type === 'rect') {
+      object.set({
+        left: object.left * zoomFactor,
+        top: object.top * zoomFactor,
+        width: object.width * zoomFactor,
+        height: object.height * zoomFactor
+      });
+    }
+  });
+  canvas.renderAll();
+}
+
+canvas.on('zoom', updateObjectCoordinates);
+canvas.on('panning', updateObjectCoordinates);
+
+
+    function loadCanvas() {
+      var filename = "{{filename}}"; // Replace "4.png" with the actual filename
+      var img = new Image();
+      img.onload = function() {
+        var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+        var imgInstance = new fabric.Image(img, {
+          scaleX: scale,
+          scaleY: scale,
+          selectable: false // Make the image unselectable
+        });
+        canvas.add(imgInstance);
+      };
+      img.src = '/static/uploads/' + filename;
+    }
+    loadCanvas();
+
+    var annotations = [];
+
+    function saveAnnotation() {
+  var data = {
+    filename: "{{filename}}" + ".txt", // Replace "4.png" with the actual filename
+    annotations: annotations.map(function(annotation) {
+      return {
+        x: annotation.annotation.x / zoomFactor, // Adjust X coordinate based on zoom
+        y: annotation.annotation.y / zoomFactor, // Adjust Y coordinate based on zoom
+        class: annotation.annotation.class,  // Add class property
+        width: annotation.annotation.width,
+        height: annotation.annotation.height,
+        
+      };
+    })
+  };
+
+  fetch('/save_annotation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Annotation saved successfully!');
+    } else {
+      alert('Failed to save annotation!');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+    }
+
+
+function addClass() {
+    var newClass = document.getElementById('new-class').value.trim();
+    if (newClass !== '') {
+        var classDropdown = document.getElementById('class-dropdown');
+        var option = document.createElement('option');
+        
+        // Assigning value starting from 11
+        option.value = classDropdown.options.length + 10;
+        
+        option.text = newClass;
+        classDropdown.appendChild(option);
+
+        // Store the added class in localStorage
+        var classes = JSON.parse(localStorage.getItem('classes')) || [];
+        classes.push(newClass);
+        localStorage.setItem('classes', JSON.stringify(classes));
+    }
+}
+
+
+
+    function toggleDrawingMode() {
+      drawingMode = !drawingMode;
+      if (drawingMode) {
+        canvas.selection = false;
+        canvas.defaultCursor = 'crosshair';
+        canvas.on('mouse:down', onMouseDown);
+        disableZoom();
+      } else {
+        canvas.selection = true;
+        canvas.defaultCursor = 'default';
+        canvas.off('mouse:down', onMouseDown);
+      }
+      document.getElementById('draw-bounding-box-button').classList.toggle('button-used');
+    }
+
+    function onMouseDown(options) {
+      
+      if (drawingMode && options.target && options.target.type === 'image') {
+        var startPoint = canvas.getPointer(options.e);
+        var rect = new fabric.Rect({
+          left: startPoint.x,
+          top: startPoint.y,
+          width: 0,
+          height: 0,
+          stroke: 'rgba(41, 207, 244,0.6)',
+          strokeWidth: 1.5,
+          fill: 'rgba(41, 207, 244,0.4)', // Transparent fill
+          selectable: true,
+          originX: 'left',
+          originY: 'top'
+        });
+        canvas.on('mouse:move', onMouseMove);
+        canvas.on('mouse:up', onMouseUp);
+        canvas.add(rect);
+        enableResizing(rect);
+        var isLockedX = rect.get('lockScalingX');
+        var isLockedY = rect.get('lockScalingY');
+
+        console.log("Lock scaling X:", isLockedX);
+        console.log("Lock scaling Y:", isLockedY);
+      }
+    }
+
+    function onMouseMove(options) {
+    if (drawingMode) {
+         console.log("check1112");
+        var endPoint = canvas.getPointer(options.e);
+        var rect = canvas.item(canvas.getObjects().length - 1);
+        
+        // Calculate width and height based on mouse position
+        var width = endPoint.x - rect.left;
+        var height = endPoint.y - rect.top;
+        
+        // Ensure width and height are non-negative
+        width = Math.max(width, 0);
+        height = Math.max(height, 0);
+        
+        // Update rectangle properties
+        rect.set({
+            width: width,
+            height: height
+        });
+        
+        canvas.renderAll();
+    }
+}
+
+
+   
+function onMouseUp(options) {
+    if (drawingMode) {
+        canvas.off('mouse:move', onMouseMove);
+        canvas.off('mouse:up', onMouseUp);
+        canvas.renderAll(); 
+        var rect = canvas.item(canvas.getObjects().length - 1);
+        console.log("hello")
+        var annotationObject = {
+            annotation: {
+                class: document.getElementById('class-dropdown').value,
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height
+            },
+            object: rect 
+        };
+
+        annotations.push(annotationObject);
+        // document.getElementById('save-annotation-button').classList.add('button-used');
+    }
+}
+
+
+function toggleZoom() {
+    zoomEnabled = !zoomEnabled;
+    if (zoomEnabled) {
+        enableZoom();
+    } else {
+        disableZoom();
+    }
+    document.getElementById('zoom-toggle').classList.toggle('button-used');
+}
+
+function enableZoom() {
+    var scale = 1,
+        lastPosX = 0,
+        lastPosY = 0,
+        isPanning = false;
+
+    canvas.wrapperEl.style.cursor = 'grab';
+
+    canvas.wrapperEl.addEventListener('mousedown', function (e) {
+        if (canvas.isDrawingMode || !zoomEnabled) {
+            return;
+        }
+        isPanning = true;
+        lastPosX = e.clientX;
+        lastPosY = e.clientY;
+        canvas.wrapperEl.style.cursor = 'grabbing';
+    });
+
+    canvas.wrapperEl.addEventListener('mousemove', function (e) {
+        if (!isPanning || !zoomEnabled) {
+            return;
+        }
+        const deltaX = e.clientX - lastPosX;
+        const deltaY = e.clientY - lastPosY;
+
+        canvas.relativePan(new fabric.Point(deltaX, deltaY));
+        lastPosX = e.clientX;
+        lastPosY = e.clientY;
+    });
+
+    canvas.wrapperEl.addEventListener('mouseup', function () {
+        if (!zoomEnabled) {
+            return;
+        }
+        isPanning = false;
+        canvas.wrapperEl.style.cursor = 'grab';
+    });
+
+    canvas.wrapperEl.addEventListener('mouseleave', function () {
+        if (!zoomEnabled) {
+            return;
+        }
+        isPanning = false;
+        canvas.wrapperEl.style.cursor = 'grab';
+    });
+
+    canvas.wrapperEl.addEventListener('wheel', function (e) {
+        if (!zoomEnabled) {
+            return;
+        }
+        var pointer = canvas.getPointer(e);
+        var zoom = canvas.getZoom();
+        var zoomFactor = 1.05; // Adjust the zoom factor for slower zoom speed
+        var newZoom = zoom;
+
+        if (e.deltaY > 0) {
+            newZoom = zoom / zoomFactor;
+        } else {
+            newZoom = zoom * zoomFactor;
+        }
+
+        // Limit zoom level between 0.5 and 5
+        newZoom = Math.max(0.5, Math.min(5, newZoom));
+
+        // Check if zoom out goes below the original size
+        if (newZoom < 1) {
+            newZoom = 1;
+        }
+
+        var zoomX = pointer.x;
+        var zoomY = pointer.y;
+
+        canvas.zoomToPoint({ x: zoomX, y: zoomY }, newZoom);
+
+        e.preventDefault();
+        e.stopPropagation();
+        canvas.defaultCursor = 'zoom-in';
+    });
+}
+
+function disableZoom() {
+    canvas.off('mouse:wheel');
+    canvas.defaultCursor = 'default';
+}
+
+var deleteMode = false; // Track delete annotation mode
+var isDrawingBox = false; // Track if drawing bounding box
+
+function deleteAnnotationsInBox() {
+    deleteMode = !deleteMode; // Toggle delete mode
+
+    if (deleteMode) {
+        // Add event listeners for mouse events on canvas
+        canvas.on('mouse:down', onMouseDownDelete);
+        canvas.on('mouse:move', onMouseMoveDelete);
+        canvas.on('mouse:up', onMouseUpDelete);
+        document.getElementById('delete-annotation-button').classList.add('button-used');
+    } else {
+        // Remove event listeners for mouse events on canvas
+        canvas.off('mouse:down', onMouseDownDelete);
+        canvas.off('mouse:move', onMouseMoveDelete);
+        canvas.off('mouse:up', onMouseUpDelete);
+        document.getElementById('delete-annotation-button').classList.remove('button-used');
+        isDrawingBox = true; // Reset drawing box flag when delete mode is turned off
+    }
+}
+
+function onMouseDownDelete(options) {
+    if (!drawingMode && !isDrawingBox) {
+        isDrawingBox = true;
+        startPoint = canvas.getPointer(options.e); // Capture initial click coordinates
+    
+        boundingBox = new fabric.Rect({
+            left: startPoint.x,
+            top: startPoint.y,
+            width: 0,
+            height: 0,
+            fill: 'rgba(0,0,0,0)', // Transparent fill
+            stroke: 'black',
+            strokeWidth: 0.5,
+            selectable: true
+        });
+        canvas.add(boundingBox);
+    }
+}
+
+function onMouseMoveDelete(options) {
+    if (isDrawingBox) {
+        var pointer = canvas.getPointer(options.e);
+        var box = new fabric.Rect({
+            left: Math.min(startPoint.x, pointer.x),
+            top: Math.min(startPoint.y, pointer.y),
+            width: Math.abs(pointer.x - startPoint.x),
+            height: Math.abs(pointer.y - startPoint.y),
+            fill: 'rgba(0,0,0,0)',
+            stroke: 'black',
+            strokeWidth: 0.5,
+            selectable: true
+        });
+        canvas.remove(boundingBox); // Remove previous box (if any)
+        canvas.add(box);
+        boundingBox = box;
+        canvas.renderAll();
+    }
+}
+
+function onMouseUpDelete(options) {
+    if (isDrawingBox) {
+        isDrawingBox = false;
+        document.getElementById('delete-annotation-button').classList.add('button-used');
+        var endPoint = canvas.getPointer(options.e);
+        var boxCoords = boundingBox.getBoundingRect();
+
+        // Array to store annotations to delete
+        var annotationsToDelete = [];
+
+        // Iterate over all objects on the canvas
+        canvas.getObjects().forEach(function(object) {
+            // Check if the object is a rectangle (annotation)
+            if (object.type === 'rect') {
+                var rect = object.getBoundingRect();
+                console.log("yes correct")
+                console.log(rect);
+                // Check for intersection between the annotation and the bounding box
+                if (
+                    rect.left <= boxCoords.left + boxCoords.width &&
+                    rect.left + rect.width >= boxCoords.left &&
+                    rect.top <= boxCoords.top + boxCoords.height &&
+                    rect.top + rect.height >= boxCoords.top
+                ){
+                    annotationsToDelete.push(object);
+                    console.log("yes correct1")
+                }
+            }
+        });
+        console.log(annotations)
+        console.log(annotationsToDelete)
+        // Remove annotations from the canvas
+        annotationsToDelete.forEach(function(object) {
+          console.log(object);
+          console.log("deleted")
+            canvas.remove(object);
+            console.log("Object removed");
+        });
+
+        // Remove the bounding box
+        canvas.remove(boundingBox);
+
+        // Clear the annotations array
+        console.log("check1",annotations.length)
+        console.log("check1",annotationsToDelete.length)
+        annotations = annotations.filter(function(annotation) {
+            return !annotationsToDelete.includes(annotation.object);
+        });
+        console.log("check2",annotations.length)
+
+    }
+}
+window.addEventListener('load', function() {
+        var storedClasses = JSON.parse(localStorage.getItem('classes')) || [];
+        var classDropdown = document.getElementById('class-dropdown');
+        storedClasses.forEach(function(className, index) {
+            var option = document.createElement('option');
+            option.value = index;
+            option.text = className;
+            classDropdown.appendChild(option);
+        });
+    });
+
+
+    var selectedRectangle = null;
+function annotateSelectedRectangle() {
+      if (selectedRectangle) {
+        // Get selected rectangle's class and coordinates
+        console.log(selectedRectangle)
+        console.log(document.getElementById('class-dropdown').value,selectedRectangle.left,selectedRectangle.top,selectedRectangle.width,selectedRectangle.height)
+        var classId = document.getElementById('class-dropdown').value;
+        var x = selectedRectangle.left;
+        var y = selectedRectangle.top;
+        var width = selectedRectangle.width * zoomFactor; // Adjust width based on zoom factor
+        var height = selectedRectangle.height * zoomFactor; // Adjust height based on zoom factor
+        var filename = "{{filename}}";
+        // Prepare data to send to the backend
+        var data = {
+          class: classId,
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+          filename: filename
+        };
+        fetch('/annotate_rectangle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.length)
+            console.log(data)
+            alert('Annotation saved successfully!');
+            function renderBoundingBoxes(boundingBoxes) {
+            var canvas1 = document.getElementById('canvas');
+            var ctx = canvas1.getContext('2d');
+
+            // Clear previous drawings
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw bounding boxes
+            for (var i = 0; i < boundingBoxes.length; i++) {
+                var bbox = boundingBoxes[i];
+                var x = bbox.x;
+                var y = bbox.y;
+                var width = bbox.width;
+                var height = bbox.height;
+
+
+                var rect = new fabric.Rect({
+          left: x,
+          top: y,
+          width: width,
+          height: height,
+          stroke: 'rgba(41, 207, 244,0.6)',
+          strokeWidth: 2,
+          fill: 'rgba(41, 207, 244,0.4)', // Transparent fill
+          selectable: true,
+          originX: 'left',
+          originY: 'top'
+        });
+
+        canvas.add(rect);
+
+                // ctx.strokeStyle = 'red'; // Set bounding box color
+                // ctx.lineWidth = 2; // Set bounding box line width
+
+                // // Draw bounding box rectangle
+                // ctx.strokeRect(x, y, width, height);
+
+                // // Optionally, add label
+                // ctx.fillStyle = 'red';
+                // ctx.font = '12px Arial';
+                // ctx.fillText(bbox.class, x, y - 5); // Display class label above the bounding box
+            }
+            
+        }
+
+        // Example data (replace this with your actual bounding box data
+
+        // Render bounding boxes on canvas
+        renderBoundingBoxes(data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while annotating the rectangle.');
+        });
+      } else {
+        alert('Please select a rectangle to annotate.');
+      }
+    }
+
+    canvas.on('mouse:down', function(event) {
+      if (event.target && event.target.type === 'rect') {
+        selectedRectangle = event.target;
+      } else {
+        selectedRectangle = null;
+      }
+    });
+    
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
