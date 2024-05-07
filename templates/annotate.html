@@ -19,17 +19,17 @@
         height: 100vh;
     }
 
-    .lower-canvas, .upper-canvas {
+    /* .lower-canvas, .upper-canvas {
       width: 800px;
       height: 600px;
       left: 0px;
       top: 0px;
-    }
+    } */
 
     .class-container,#canvas-container {
         position: relative;
         width: 90%;
-        height: 80%;
+        height:80%;
         margin-top: 20px;
         display: block;
         justify-content: center;
@@ -48,7 +48,8 @@
         cursor: pointer;
         /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
         /* padding:30px 30px; */
-        object-fit: contain;
+        margin-right:30px;
+        object-fit: scale-down;
         /* margin-left: 30px; */
         /* margin-right: 30px; */
 
@@ -174,12 +175,17 @@
         <span id="reset-icon">&#8635;</span> <!-- Unicode for refresh icon -->
       </button>
       <button id="draw-bounding-box-button" onclick="toggleDrawingMode()">Draw Bounding Box</button>
-      <button id="save-annotation-button" onclick="saveAnnotation()">Save Annotation</button>
+      <button id="delete-annotation-button" onclick="deleteAnnotationsInBox()">Delete Annotations</button>
+      <img id="zoom-toggle" src="../static/icons8-zoom-all-48.png" style="border-radius: 200px; cursor: pointer;" onclick="toggleZoom()">
+      <button id="annotate-button" onclick="annotateSelectedRectangle()">Annotate</button>
+      <button id="save-annotation-button" onclick="saveAnnotation()" style="background-color: rgb(16, 208, 128);
+      border: 2px solid rgb(16, 208, 128);">Save Annotation File</button>
         <!-- <button id="template-match-button" onclick="performTemplateMatching()">Template Match</button> -->
-        <button id="annotate-button" onclick="annotateSelectedRectangle()">Annotate</button>
+        
 
-        <button id="zoom-toggle" onclick="toggleZoom()">Toggle Zoom</button>
-        <button id="delete-annotation-button" onclick="deleteAnnotationsInBox()">Delete Annotation</button>
+        
+
+        
         
     </div>
   </div>
@@ -247,20 +253,38 @@ canvas.on('zoom', updateObjectCoordinates);
 canvas.on('panning', updateObjectCoordinates);
 
 
-    function loadCanvas() {
-      var filename = "{{filename}}"; // Replace "4.png" with the actual filename
-      var img = new Image();
-      img.onload = function() {
-        var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-        var imgInstance = new fabric.Image(img, {
-          scaleX: scale,
-          scaleY: scale,
-          selectable: false // Make the image unselectable
+function loadCanvas() {
+    var filename = "{{filename}}"; // Replace "{{filename}}" with the actual filename
+    var canvasWidth = 700; // Canvas width
+    var canvasHeight = 500; // Canvas height
+
+    fabric.Image.fromURL('/static/uploads/' + filename, function(img) {
+        // Calculate scale to fit the image into the canvas
+        var scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
+
+        // Calculate scaled dimensions
+        var scaledWidth = img.width * scale;
+        var scaledHeight = img.height * scale;
+
+        // Set canvas size to match the scaled image dimensions
+        canvas.setDimensions({ width: scaledWidth, height: scaledHeight });
+        console.log(canvas.width,canvas.height)
+        // Set image scale and add it to the canvas
+        img.set({
+            scaleX: scale,
+            scaleY: scale,
+            selectable: false // Make the image unselectable
         });
-        canvas.add(imgInstance);
-      };
-      img.src = '/static/uploads/' + filename;
-    }
+        canvas.add(img);
+
+        // Center the image on the canvas
+        img.center();
+    });
+}
+
+
+
+
     loadCanvas();
 
     var annotations = [];
@@ -275,7 +299,7 @@ canvas.on('panning', updateObjectCoordinates);
         class: annotation.annotation.class,  // Add class property
         width: annotation.annotation.width,
         height: annotation.annotation.height,
-        
+        // ... other annotation properties (if needed)
       };
     })
   };
@@ -291,15 +315,15 @@ canvas.on('panning', updateObjectCoordinates);
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert('Annotation saved successfully!');
+      alert('Annotation file saved successfully!');
     } else {
-      alert('Failed to save annotation!');
+      alert('Failed to save annotation file!');
     }
   })
   .catch(error => {
     console.error('Error:', error);
   });
-    }
+}
 
 
 function addClass() {
@@ -348,7 +372,7 @@ function addClass() {
           width: 0,
           height: 0,
           stroke: 'rgba(41, 207, 244,0.6)',
-          strokeWidth: 1.5,
+          strokeWidth: 1,
           fill: 'rgba(41, 207, 244,0.4)', // Transparent fill
           selectable: true,
           originX: 'left',
@@ -543,7 +567,7 @@ function onMouseDownDelete(options) {
             top: startPoint.y,
             width: 0,
             height: 0,
-            fill: 'rgba(0,0,0,0)', // Transparent fill
+            fill: 'rgba(197, 66, 237, 0.35)', // Transparent fill
             stroke: 'black',
             strokeWidth: 0.5,
             selectable: true
@@ -560,7 +584,7 @@ function onMouseMoveDelete(options) {
             top: Math.min(startPoint.y, pointer.y),
             width: Math.abs(pointer.x - startPoint.x),
             height: Math.abs(pointer.y - startPoint.y),
-            fill: 'rgba(0,0,0,0)',
+            fill: 'rgba(197, 66, 237, 0.35)',
             stroke: 'black',
             strokeWidth: 0.5,
             selectable: true
@@ -648,6 +672,7 @@ function annotateSelectedRectangle() {
         var width = selectedRectangle.width * zoomFactor; // Adjust width based on zoom factor
         var height = selectedRectangle.height * zoomFactor; // Adjust height based on zoom factor
         var filename = "{{filename}}";
+        
         // Prepare data to send to the backend
         var data = {
           class: classId,
@@ -655,7 +680,9 @@ function annotateSelectedRectangle() {
           y: y,
           width: width,
           height: height,
-          filename: filename
+          filename: filename,
+          can_width:canvas.width,
+          can_height:canvas.height
         };
         fetch('/annotate_rectangle', {
           method: 'POST',
@@ -669,15 +696,13 @@ function annotateSelectedRectangle() {
         .then(data => {
             console.log(data.length)
             console.log(data)
-            alert('Annotation saved successfully!');
+            alert('Successfully Annotated the component!');
             function renderBoundingBoxes(boundingBoxes) {
             var canvas1 = document.getElementById('canvas');
             var ctx = canvas1.getContext('2d');
 
-            // Clear previous drawings
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // canvas.clear();
 
-            // Draw bounding boxes
             for (var i = 0; i < boundingBoxes.length; i++) {
                 var bbox = boundingBoxes[i];
                 var x = bbox.x;
@@ -685,7 +710,7 @@ function annotateSelectedRectangle() {
                 var width = bbox.width;
                 var height = bbox.height;
 
-
+                
                 var rect = new fabric.Rect({
           left: x,
           top: y,
@@ -698,6 +723,19 @@ function annotateSelectedRectangle() {
           originX: 'left',
           originY: 'top'
         });
+
+        var annotationObject = {
+            annotation: {
+                class: document.getElementById('class-dropdown').value,
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height
+            },
+            object: rect 
+        };
+
+        annotations.push(annotationObject);
 
         canvas.add(rect);
 
@@ -712,7 +750,7 @@ function annotateSelectedRectangle() {
                 // ctx.font = '12px Arial';
                 // ctx.fillText(bbox.class, x, y - 5); // Display class label above the bounding box
             }
-            
+            alert("done")
         }
 
         // Example data (replace this with your actual bounding box data
@@ -740,20 +778,3 @@ function annotateSelectedRectangle() {
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
