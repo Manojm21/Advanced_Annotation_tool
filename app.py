@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 import numpy as np
 import cv2
+# from PIL import Image
+
 
 app = Flask(__name__)
 
@@ -13,6 +15,8 @@ file_class_map = {}
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -35,6 +39,7 @@ def upload_file():
 def annotate_image(filename):
     return render_template('annotate.html', filename=filename)
 
+
 @app.route('/save_annotation', methods=['POST'])
 def save_annotation():
     data = request.get_json()
@@ -42,7 +47,12 @@ def save_annotation():
     if data:
         filename = data['filename']
         annotations = data['annotations']
-        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename.split('.')[0] + '.txt')
+        
+        labels_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'labels')  # Directory to save labels
+        if not os.path.exists(labels_dir):
+            os.makedirs(labels_dir)
+        
+        save_path = os.path.join(labels_dir, filename.split('.')[0] + '.txt')
 
         existing_bboxes = []  # List to store existing bounding boxes
         semi_existing_bboxes = [] 
@@ -150,6 +160,7 @@ def annotate_rectangle():
     cv2.imshow("mmssmll", roi)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    # roi.show()
 
     result = cv2.matchTemplate(input_image, roi, cv2.TM_CCOEFF_NORMED)
 

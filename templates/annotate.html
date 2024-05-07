@@ -696,7 +696,7 @@ function annotateSelectedRectangle() {
         .then(data => {
             console.log(data.length)
             console.log(data)
-            alert('Successfully Annotated the component!');
+            alert('Successfully Annotated the component using template matching!');
             function renderBoundingBoxes(boundingBoxes) {
             var canvas1 = document.getElementById('canvas');
             var ctx = canvas1.getContext('2d');
@@ -717,7 +717,7 @@ function annotateSelectedRectangle() {
           width: width,
           height: height,
           stroke: 'rgba(41, 207, 244,0.6)',
-          strokeWidth: 2,
+          strokeWidth: 0.8,
           fill: 'rgba(41, 207, 244,0.4)', // Transparent fill
           selectable: true,
           originX: 'left',
@@ -750,7 +750,6 @@ function annotateSelectedRectangle() {
                 // ctx.font = '12px Arial';
                 // ctx.fillText(bbox.class, x, y - 5); // Display class label above the bounding box
             }
-            alert("done")
         }
 
         // Example data (replace this with your actual bounding box data
