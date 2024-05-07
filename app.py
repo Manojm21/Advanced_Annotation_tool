@@ -28,7 +28,15 @@ def upload_file():
 
     if file:
         filename = file.filename
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                
+        images_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
+        # Ensure that the 'images' directory exists, create it if it doesn't
+        if not os.path.exists(images_folder):
+            os.makedirs(images_folder)
+        # Assuming filename is the name of the uploaded file
+        file_path = os.path.join(images_folder, filename)
+
+
         file.save(file_path)
 
         return redirect(url_for('annotate_image', filename=filename))
@@ -110,6 +118,8 @@ def save_annotation():
 
                     if not overlap:
                         class_name = annotation['class']
+                        new_bbox = [x, y, width, height]
+                        existing_bboxes.append(new_bbox)
                         f.write(f"{class_name} {x} {y} {width} {height}\n")
 
         return jsonify({'success': True})
