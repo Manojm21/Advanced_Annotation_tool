@@ -176,10 +176,10 @@
       </button>
       <button id="draw-bounding-box-button" onclick="toggleDrawingMode()">Draw Bounding Box</button>
       <button id="delete-annotation-button" onclick="deleteAnnotationsInBox()">Delete Annotations</button>
-      <img id="zoom-toggle" src="../static/icons8-zoom-all-48.png" style="border-radius: 200px; cursor: pointer;" onclick="toggleZoom()">
+      <!-- <img id="zoom-toggle" src="../static/icons8-zoom-all-48.png" style="border-radius: 200px; cursor: pointer;" onclick="toggleZoom()"> -->
       <button id="annotate-button" onclick="annotateSelectedRectangle()">Annotate</button>
-      <button id="save-annotation-button" onclick="saveAnnotation()" style="background-color: rgb(16, 208, 128);
-      border: 2px solid rgb(16, 208, 128);">Save Annotation File</button>
+      <!-- <button id="save-annotation-button" onclick="saveAnnotation()" style="background-color: rgb(16, 208, 128);
+      border: 2px solid rgb(16, 208, 128);">Save Annotation File</button> -->
         <!-- <button id="template-match-button" onclick="performTemplateMatching()">Template Match</button> -->
         
 
@@ -218,7 +218,7 @@
         mtr: false
       });
       // Make the object selectable again for resizing
-      rect.selectable = true;
+      rect.selectable = false;
     
       canvas.renderAll();
     }
@@ -252,13 +252,33 @@ function updateObjectCoordinates() {
 canvas.on('zoom', updateObjectCoordinates);
 canvas.on('panning', updateObjectCoordinates);
 
+function clearCanvasEventListeners() {
+    canvas.off('mouse:down');
+    canvas.off('mouse:move');
+    canvas.off('mouse:up');
+    canvas.off('mouse:wheel');
+    canvas.off('zoom');
+    canvas.off('panning');
+}
 
-function loadCanvas() {
+window.addEventListener('beforeunload', function() {
+    // Clear canvas event listeners before unloading the page
+    clearCanvasEventListeners();
+});
+
+window.addEventListener('load', async function() {
+            clearCanvasEventListeners();
+            await loadCanvas();
+            
+        });
+
+
+async function loadCanvas() {
     var filename = "{{filename}}"; // Replace "{{filename}}" with the actual filename
     var canvasWidth = 700; // Canvas width
     var canvasHeight = 500; // Canvas height
 
-    fabric.Image.fromURL('/static/uploads/' + filename, function(img) {
+    fabric.Image.fromURL('/static/uploads/images/' + filename, function(img) {
         // Calculate scale to fit the image into the canvas
         var scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
 
@@ -279,13 +299,50 @@ function loadCanvas() {
 
         // Center the image on the canvas
         img.center();
+
+        var filename = "{{filename}}";
+        var data={
+              filename:filename
+        }
+        fetch('/fetch_annotations',{
+              method: 'POST',
+              headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+              },
+              body: JSON.stringify(data)
+              })
+                .then(response => response.json())
+                .then(data => {
+                    // Load the image onto the canvas
+                    console.log("loading")
+                    
+                    console.log(data.annotations)
+                    // Draw rectangles for each annotation
+                    data.annotations.forEach(annotation => {
+                        var rect = new fabric.Rect({
+                            left: annotation.x,
+                            top: annotation.y,
+                            width: annotation.width,
+                            height: annotation.height,
+                            stroke: 'rgba(41, 207, 244,0.6)',
+                            strokeWidth: 0.8,
+                            fill: 'rgba(41, 207, 244,0.4)',
+                            selectable: false  // Ensure bounding boxes are not selectable
+                        });
+                        canvas.add(rect);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
     });
 }
 
 
 
 
-    loadCanvas();
+    // loadCanvas();
 
     var annotations = [];
 
@@ -374,7 +431,7 @@ function addClass() {
           stroke: 'rgba(41, 207, 244,0.6)',
           strokeWidth: 1,
           fill: 'rgba(41, 207, 244,0.4)', // Transparent fill
-          selectable: true,
+          selectable: false,
           originX: 'left',
           originY: 'top'
         });
@@ -387,6 +444,8 @@ function addClass() {
 
         console.log("Lock scaling X:", isLockedX);
         console.log("Lock scaling Y:", isLockedY);
+
+        canvas.setActiveObject(rect);
       }
     }
 
@@ -450,8 +509,95 @@ function toggleZoom() {
     document.getElementById('zoom-toggle').classList.toggle('button-used');
 }
 
+// function enableZoom() {
+//     var scale = 1,
+//         lastPosX = 0,
+//         lastPosY = 0,
+//         isPanning = false;
+
+//     canvas.wrapperEl.style.cursor = 'grab';
+
+//     canvas.wrapperEl.addEventListener('mousedown', function (e) {
+//         if (canvas.isDrawingMode || !zoomEnabled) {
+//             return;
+//         }
+//         isPanning = true;
+//         lastPosX = e.clientX;
+//         lastPosY = e.clientY;
+//         canvas.wrapperEl.style.cursor = 'grabbing';
+//     });
+
+//     canvas.wrapperEl.addEventListener('mousemove', function (e) {
+//         if (!isPanning || !zoomEnabled) {
+//             return;
+//         }
+//         const deltaX = e.clientX - lastPosX;
+//         const deltaY = e.clientY - lastPosY;
+
+//         canvas.relativePan(new fabric.Point(deltaX, deltaY));
+//         lastPosX = e.clientX;
+//         lastPosY = e.clientY;
+//     });
+
+//     canvas.wrapperEl.addEventListener('mouseup', function () {
+//         if (!zoomEnabled) {
+//             return;
+//         }
+//         isPanning = false;
+//         canvas.wrapperEl.style.cursor = 'grab';
+//     });
+
+//     canvas.wrapperEl.addEventListener('mouseleave', function () {
+//         if (!zoomEnabled) {
+//             return;
+//         }
+//         isPanning = false;
+//         canvas.wrapperEl.style.cursor = 'grab';
+//     });
+
+//     canvas.wrapperEl.addEventListener('wheel', function (e) {
+//         if (!zoomEnabled) {
+//             return;
+//         }
+//         var pointer = canvas.getPointer(e);
+//         var zoom = canvas.getZoom();
+//         var zoomFactor = 1.05; // Adjust the zoom factor for slower zoom speed
+//         var newZoom = zoom;
+
+//         if (e.deltaY > 0) {
+//             newZoom = zoom / zoomFactor;
+//         } else {
+//             newZoom = zoom * zoomFactor;
+//         }
+
+//         // Limit zoom level between 0.5 and 5
+//         newZoom = Math.max(0.5, Math.min(5, newZoom));
+
+//         // Check if zoom out goes below the original size
+//         if (newZoom < 1) {
+//             newZoom = 1;
+//         }
+
+//         var zoomX = pointer.x;
+//         var zoomY = pointer.y;
+
+//         canvas.zoomToPoint({ x: zoomX, y: zoomY }, newZoom);
+
+//         e.preventDefault();
+//         e.stopPropagation();
+//         canvas.defaultCursor = 'zoom-in';
+//     });
+// }
+
+// function disableZoom() {
+//     canvas.off('mouse:wheel');
+//     canvas.defaultCursor = 'default';
+// }
+
 function enableZoom() {
-    var scale = 1,
+        zoomEnabled = true;
+        canvas.wrapperEl.style.cursor = 'grab';
+        var scale = 1,
         lastPosX = 0,
         lastPosY = 0,
         isPanning = false;
@@ -495,44 +641,59 @@ function enableZoom() {
         isPanning = false;
         canvas.wrapperEl.style.cursor = 'grab';
     });
+    }
 
-    canvas.wrapperEl.addEventListener('wheel', function (e) {
-        if (!zoomEnabled) {
-            return;
-        }
-        var pointer = canvas.getPointer(e);
-        var zoom = canvas.getZoom();
-        var zoomFactor = 1.05; // Adjust the zoom factor for slower zoom speed
-        var newZoom = zoom;
+    function disableZoom() {
+        zoomEnabled = false;
+        canvas.wrapperEl.style.cursor = 'default';
+    }
 
-        if (e.deltaY > 0) {
-            newZoom = zoom / zoomFactor;
-        } else {
-            newZoom = zoom * zoomFactor;
-        }
+    
 
-        // Limit zoom level between 0.5 and 5
-        newZoom = Math.max(0.5, Math.min(5, newZoom));
-
-        // Check if zoom out goes below the original size
-        if (newZoom < 1) {
-            newZoom = 1;
-        }
-
-        var zoomX = pointer.x;
-        var zoomY = pointer.y;
-
-        canvas.zoomToPoint({ x: zoomX, y: zoomY }, newZoom);
-
-        e.preventDefault();
-        e.stopPropagation();
-        canvas.defaultCursor = 'zoom-in';
+    canvas.wrapperEl.addEventListener('mouseover', function() {
+        var value = isAnnotationButtonActive();
+        if(value==false)
+        enableZoom();
     });
-}
 
-function disableZoom() {
-    canvas.off('mouse:wheel');
-    canvas.defaultCursor = 'default';
+    // Event listener for mouse out of canvas
+    canvas.wrapperEl.addEventListener('mouseout', function() {
+        disableZoom();
+    });
+
+    // Event listener for mouse wheel to zoom
+    canvas.wrapperEl.addEventListener('wheel', function(e) {
+        if (zoomEnabled) {
+            var pointer = canvas.getPointer(e);
+            var zoom = canvas.getZoom();
+            var zoomFactor = 1.05; // Adjust the zoom factor for desired speed
+
+            var newZoom = zoom;
+            if (e.deltaY > 0) {
+                newZoom = zoom / zoomFactor;
+            } else {
+                newZoom = zoom * zoomFactor;
+            }
+
+            // Limit zoom level between 0.5 and 5
+            newZoom = Math.max(0.5, Math.min(5, newZoom));
+
+            // Check if zoom out goes below the original size
+            if (newZoom < 1) {
+                newZoom = 1;
+            }
+
+            canvas.zoomToPoint({ x: pointer.x, y: pointer.y }, newZoom);
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+
+    function isAnnotationButtonActive() {
+    // Check if any of the annotation buttons are active
+    return document.getElementById('draw-bounding-box-button').classList.contains('button-used') ||
+           document.getElementById('delete-annotation-button').classList.contains('button-used') ||
+           document.getElementById('annotate-button').classList.contains('button-used');
 }
 
 var deleteMode = false; // Track delete annotation mode
@@ -570,7 +731,7 @@ function onMouseDownDelete(options) {
             fill: 'rgba(197, 66, 237, 0.35)', // Transparent fill
             stroke: 'black',
             strokeWidth: 0.5,
-            selectable: true
+            selectable: false
         });
         canvas.add(boundingBox);
     }
@@ -587,7 +748,7 @@ function onMouseMoveDelete(options) {
             fill: 'rgba(197, 66, 237, 0.35)',
             stroke: 'black',
             strokeWidth: 0.5,
-            selectable: true
+            selectable: false
         });
         canvas.remove(boundingBox); // Remove previous box (if any)
         canvas.add(box);
@@ -645,9 +806,41 @@ function onMouseUpDelete(options) {
             return !annotationsToDelete.includes(annotation.object);
         });
         console.log("check2",annotations.length)
+        var deleteannotations=[];
+        annotationsToDelete.forEach((annotation)=>{
+            deleteannotations.push([annotation.left,annotation.top,annotation.width,annotation.height]);
+        })
+        console.log(deleteannotations);
+
+        removedeletedannotation(deleteannotations);
 
     }
 }
+
+function removedeletedannotation(annotationsToDelete)
+{
+   filename='{{filename}}'
+   data={
+      filename:filename,
+      annotationsToDelete:annotationsToDelete
+   }
+
+   fetch('/delete_annotations',{
+              method: 'POST',
+              headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+              },
+              body: JSON.stringify(data)
+              })
+                .then(response => response.json())
+                .then(data=>console.log(data.message))
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+
+}
+
 window.addEventListener('load', function() {
         var storedClasses = JSON.parse(localStorage.getItem('classes')) || [];
         var classDropdown = document.getElementById('class-dropdown');
@@ -660,8 +853,9 @@ window.addEventListener('load', function() {
     });
 
 
-    var selectedRectangle = null;
+var selectedRectangle = null;
 function annotateSelectedRectangle() {
+      selectedRectangle=canvas.getActiveObject();
       if (selectedRectangle) {
         // Get selected rectangle's class and coordinates
         console.log(selectedRectangle)
@@ -702,7 +896,11 @@ function annotateSelectedRectangle() {
             var ctx = canvas1.getContext('2d');
 
             // canvas.clear();
-
+            canvas.discardActiveObject();
+            if(annotations.length > 0)
+            {
+                annotations.pop();
+            }
             for (var i = 0; i < boundingBoxes.length; i++) {
                 var bbox = boundingBoxes[i];
                 var x = bbox.x;
@@ -719,7 +917,7 @@ function annotateSelectedRectangle() {
           stroke: 'rgba(41, 207, 244,0.6)',
           strokeWidth: 0.8,
           fill: 'rgba(41, 207, 244,0.4)', // Transparent fill
-          selectable: true,
+          selectable: false,
           originX: 'left',
           originY: 'top'
         });
@@ -756,6 +954,8 @@ function annotateSelectedRectangle() {
 
         // Render bounding boxes on canvas
         renderBoundingBoxes(data);
+
+        saveAnnotation();
         })
         .catch(error => {
           console.error('Error:', error);
