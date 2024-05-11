@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 import numpy as np
 import cv2
+import json
 # from PIL import Image
 
 
@@ -79,8 +80,6 @@ def save_annotation():
                 new_bbox_strs.add(bbox_str)
                 new_annotations.append(annotation)
 
-        
-        
         if not existing_bboxes:
             with open(save_path, 'w') as f:
                 for annotation in new_annotations:
@@ -132,7 +131,7 @@ def annotate_rectangle():
     x, y, width, height = data.get('x'), data.get('y'), data.get('width'), data.get('height')
     filename = data.get('filename')
 
-    image_path = "static/uploads" + "/" + filename
+    image_path = "static/uploads/images" + "/" + filename
     input_image = cv2.imread(image_path)
 
     canvas_width = data.get('can_width')
@@ -187,10 +186,11 @@ def annotate_rectangle():
                 return True
         return False
 
-    threshold = 0.9
+    threshold = 0.7
     loc = np.where(result >= threshold)
 
-    detected_bboxes = [[selected_class, int(x), int(y), width, height]]
+    detected_bboxes = []
+    # detected_bboxes = [[selected_class, int(x), int(y), width, height]]
     for pt in zip(*loc[::-1]):
         can_x, can_y = inverse_map_coordinates(pt[0], pt[1])
         proposed_bbox = [selected_class, can_x, can_y, width, height]
@@ -231,6 +231,67 @@ def calculate_iou(bbox1, bbox2):
     iou = intersection_area / union_area
 
     return iou
+
+@app.route('/fetch_annotations', methods=['POST'])
+def fetch_annotations():
+    data = request.json
+    filename=data.get('filename')
+    labels_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'labels')
+    file_path=os.path.join(labels_dir,filename.split('.')[0]+".txt")
+    print("present                 ")
+    if(os.path.exists(file_path)):
+        with open(file_path, "r") as file:
+            annotations = []
+            for line in file:
+                parts = line.split(" ")
+                annotations.append({
+                    "class": parts[0],
+                    "x": float(parts[1]),
+                    "y": float(parts[2]),
+                    "width": float(parts[3]),
+                    "height": float(parts[4])
+                })
+        return jsonify({"annotations": annotations})
+    else:
+        return jsonify({"annotations": []})
+
+from flask import request, jsonify
+import os
+
+@app.route('/delete_annotations', methods=['POST'])
+def delete_annotations():
+    filename = request.json['filename']
+    annotations_to_delete = request.json['annotationsToDelete']
+    labels_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'labels')
+    file_path = os.path.join(labels_dir, filename.split('.')[0] + ".txt")
+
+    # Check if the file exists
+    if os.path.exists(file_path):
+        # Load existing annotations from the file
+        with open(file_path, 'r') as file:
+            existing_annotations = file.readlines()
+
+        # Remove the annotations to be deleted
+        updated_annotations = []
+        for annotation in existing_annotations:
+            annotation_data = annotation.strip().split()
+            annotation_coords = list(map(float, annotation_data[1:]))  # Convert coords to floats
+            # Check if the annotation is within the threshold of any annotation to delete
+            if not any(all(abs(a - b) <= 1 for a, b in zip(annotation_coords, delete_coords))
+                       for delete_coords in annotations_to_delete):
+                updated_annotations.append(annotation)
+
+        # Save the updated annotations back to the file
+        with open(file_path, 'w') as file:
+            file.writelines(updated_annotations)
+
+        return jsonify({'message': 'Annotations deleted successfully', 'filename': filename})
+    else:
+        return jsonify({'error': 'File not found', 'filename': filename})
+
+
+
+    
 
 
 if __name__ == '__main__':

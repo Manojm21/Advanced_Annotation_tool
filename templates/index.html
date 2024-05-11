@@ -1,356 +1,71 @@
-<!-- <!DOCTYPE html>
+
+
+
+-->
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Image</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            text-align: center;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .upload-button {
-            background-color: rgb(16, 173, 208);
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease, transform 0.3s ease; /* Added transition effect */
-            margin-right: 10px; /* Add margin between buttons */
-            margin-top: 15px;
-            width:500px;
-            margin-bottom: 15px;
-        }
-
-        .upload-button:hover {
-            background-color:  rgb(41, 207, 244);
-            transform: scale(1.05); /* Scale up slightly on hover */
-        }
-
-        .image-preview-container {
-            margin-top: 85px;
-            width: 800px;
-            height: 600px;
-            display: none; /* Initially hidden */
-            border: 2px dashed #ccc; /* Dotted line border */
-            border-radius: 8px;
-            padding: 20px; /* Add padding inside the box */
-            background-color: #6ec6be75;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow effect */
-        }
-
-        .image-preview {
-            width: 100%;
-            height: 70%;
-            object-fit: contain;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .image-name {
-            font-size: 18px;
-            color: #333;
-        }
-
-        /* Style for error message */
-        #error-message {
-            color: red;
-            margin-top: 10px;
-            display: none; /* Initially hidden */
-        }
-
-        /* Style for the initial image trigger */
-        .image-icon-container {
-            background-color: #fff;
-            border-radius: 16px;
-            display: inline-block;
-            padding: 60px 90px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow effect */
-            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-        }
-
-        .image-icon {
-            width: 250px;
-            
-            cursor: pointer;
-            transition: transform 0.3s ease; /* Smooth transition */
-        }
-
-        /* Animation effect on hover */
-        .image-icon-container:hover {
-            transform: scale(1.05); /* Scale up slightly on hover */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Increase shadow on hover */
-        }
-
-        .upload-button:hover,.image-icon:hover {
-            transform: scale(1.1); /* Scale up slightly on hover */
-        }
-        h1{
-            color:rgb(16, 173, 208);
-        }
-        #trigger-text
-        {
-            color:rgb(16, 173, 208);
-        }
-        #image-name{
-            color:rgb(16, 125, 208);
-        }
-    </style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Upload Image</title>
+   <link rel="stylesheet" href="../static/style/index_style.css">
+  
 </head>
 <body>
-    <div class="container">
-       
-        <div class="image-icon-container" id="trigger-image" onclick="document.getElementById('file').click()">
-            <span><h1>ABB ANNOTATION TOOL</h1></span>
-            <img src="/static/upload_icon.png" alt="Upload Icon" class="image-icon">
-            <br>
-            <span id="trigger-text">Choose File For Annotation</span>
-        </div>
+   <div class="container">
+       <!-- Initial image trigger -->
+       <div class="image-icon-container" id="trigger-image" onclick="document.getElementById('file').click()">
+           <span><h1>ABB ANNOTATION TOOL</h1></span>
+           <img src="/static/upload_icon.png" alt="Upload Icon" class="image-icon">
+           <br>
+           <span id="trigger-text">Choose File For Annotation</span>
+       </div>
 
-      
-        <div class="image-preview-container" id="image-preview-container">
-            <span style="
-            color: rgb(16, 125, 208);
-        "><h1>PREVIEW IMAGE</h1></span>            <img src="#" alt="Image Preview" class="image-preview" id="image-preview">
-            <div class="image-name" id="image-name"></div>
-        </div>
-        
+       <!-- Preview image container -->
+       <div class="image-preview-container" id="image-preview-container">
+           <span><h1>PREVIEW IMAGE</h1></span>
+           <img src="#" alt="Image Preview" class="image-preview" id="image-preview">
+           <div class="image-name" id="image-name"></div>
+       </div>
 
-        <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form" style="display: none;">
-            <input type="file" name="file" id="file" style="display: none; padding:5px 5px;">
-            <button type="submit" class="upload-button">Upload</button>
-        </form>
+       <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form" style="display: none;">
+           <input type="file" name="file" id="file" style="display: none;">
+           <button type="submit" class="upload-button">Upload</button>
+       </form>
 
 
-        <p id="error-message"></p>
-    </div>
+       <p id="error-message"></p>
+   </div>
 
-    <script>
-        document.getElementById('file').addEventListener('change', function() {
-            var file = this.files[0];
-            
-            if (file) {
-                // Show image preview
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('image-preview').setAttribute('src', e.target.result);
-                    document.getElementById('image-preview-container').style.display = 'block';
-                    document.getElementById('trigger-image').style.display = 'none';
-                    document.getElementById('upload-preview-button').style.display = 'block';
-                }
-                reader.readAsDataURL(file);
+   <script>
+       document.getElementById('file').addEventListener('change', function() {
+           var file = this.files[0];
+           
+           if (file) {
+               // Show image preview
+               var reader = new FileReader();
+               reader.onload = function(e) {
+                   document.getElementById('image-preview').setAttribute('src', e.target.result);
+                   document.getElementById('image-preview-container').style.display = 'block';
+                   document.getElementById('trigger-image').style.display = 'none';
+                   document.getElementById('upload-preview-button').style.display = 'block';
+               }
+               reader.readAsDataURL(file);
 
-                // Display file name
-                document.getElementById('image-name').innerText = 'Selected Image: ' + file.name;
+               // Display file name
+               document.getElementById('image-name').innerText = 'Selected Image: ' + file.name;
 
-                // Show upload form
-                document.getElementById('upload-form').style.display = 'block';
-            } else {
-                // Handle case where no file is selected
-                document.getElementById('error-message').innerText = 'No file selected.';
-                document.getElementById('error-message').style.display = 'block';
-            }
-        });
-    </script>
-</body>
-</html>
-
-
-
-
-
- -->
-
-
- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Image</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            text-align: center;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .upload-button {
-            background-color: rgb(16, 173, 208);
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease, transform 0.3s ease; /* Added transition effect */
-            margin-right: 10px; /* Add margin between buttons */
-            margin-top: 15px;
-            width:500px;
-            margin-bottom: 15px;
-        }
-
-        .upload-button:hover {
-            background-color:  rgb(41, 207, 244);
-            transform: scale(1.05); /* Scale up slightly on hover */
-        }
-
-        .image-preview-container {
-            margin-top: 20px;
-            width: 800px;
-            height: 600px;
-            display: none; /* Initially hidden */
-            border: 2px dashed #ccc; /* Dotted line border */
-            border-radius: 8px;
-            padding: 20px; /* Add padding inside the box */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow effect */
-        }
-
-        .image-preview {
-            width: 100%;
-            height: 70%;
-            object-fit: contain;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .image-name {
-            font-size: 18px;
-            color: #333;
-        }
-
-        /* Style for error message */
-        #error-message {
-            color: red;
-            margin-top: 10px;
-            display: none; /* Initially hidden */
-        }
-
-        /* Style for the initial image trigger */
-        .image-icon-container {
-            background-color: #fff;
-            border-radius: 16px;
-            display: inline-block;
-            padding: 60px 90px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow effect */
-            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-        }
-
-        .image-icon {
-            width: 500px;
-            height: 350px;
-            cursor: pointer;
-            transition: transform 0.3s ease; /* Smooth transition */
-        }
-
-        /* Animation effect on hover */
-        .image-icon-container:hover {
-            transform: scale(1.05); /* Scale up slightly on hover */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Increase shadow on hover */
-        }
-
-        .upload-button:hover,.image-icon:hover {
-            transform: scale(1.1); /* Scale up slightly on hover */
-        }
-        h1{
-            color:rgb(16, 173, 208);
-        }
-        #trigger-text
-        {
-            color:rgb(16, 173, 208);
-        }
-        #image-name{
-            color:rgb(16, 173, 208);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Initial image trigger -->
-        <div class="image-icon-container" id="trigger-image" onclick="document.getElementById('file').click()">
-            <span><h1>ABB ANNOTATION TOOL</h1></span>
-            <img src="/static/upload_icon.png" alt="Upload Icon" class="image-icon">
-            <br>
-            <span id="trigger-text">Choose File For Annotation</span>
-        </div>
-
-        <!-- Preview image container -->
-        <div class="image-preview-container" id="image-preview-container">
-            <span><h1>PREVIEW IMAGE</h1></span>
-            <img src="#" alt="Image Preview" class="image-preview" id="image-preview">
-            <div class="image-name" id="image-name"></div>
-        </div>
-
-        <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form" style="display: none;">
-            <input type="file" name="file" id="file" style="display: none;">
-            <button type="submit" class="upload-button">Upload</button>
-        </form>
-
-
-        <p id="error-message"></p>
-    </div>
-
-    <script>
-        document.getElementById('file').addEventListener('change', function() {
-            var file = this.files[0];
-            
-            if (file) {
-                // Show image preview
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('image-preview').setAttribute('src', e.target.result);
-                    document.getElementById('image-preview-container').style.display = 'block';
-                    document.getElementById('trigger-image').style.display = 'none';
-                    document.getElementById('upload-preview-button').style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-
-                // Display file name
-                document.getElementById('image-name').innerText = 'Selected Image: ' + file.name;
-
-                // Show upload form
-                document.getElementById('upload-form').style.display = 'block';
-            } else {
-                // Handle case where no file is selected
-                document.getElementById('error-message').innerText = 'No file selected.';
-                document.getElementById('error-message').style.display = 'block';
-            }
-        });
-    </script>
+               // Show upload form
+               document.getElementById('upload-form').style.display = 'block';
+           } else {
+               // Handle case where no file is selected
+               document.getElementById('error-message').innerText = 'No file selected.';
+               document.getElementById('error-message').style.display = 'block';
+           }
+       });
+   </script>
 </body>
 </html>
 
