@@ -897,7 +897,52 @@ $(document).ready(function() {
             console.log('Width:', selectedRegion.width);
             console.log('Height:', selectedRegion.height);
 
+// //    ----------------------------------------------------------------------------------------     // 
 
+// // Assuming you have the coordinates in a variable named 'externalTextFileContent'
+
+//     // Compare selected region coordinates with external coordinates
+//     var selectedCoords = {
+//         left: selectedRegion.left,
+//         top: selectedRegion.top,
+//         right: selectedRegion.left + selectedRegion.width,
+//         bottom: selectedRegion.top + selectedRegion.height
+//     };
+
+//     var componentsInRegion = [];
+//     externalCoordinates.forEach(function(coord) {
+//         var componentCoords = {
+//             left: coord.x,
+//             top: coord.y,
+//             right: coord.x + coord.width,
+//             bottom: coord.y + coord.height
+//         };
+
+//         // Check if component is inside the selected region
+//         if (
+//             componentCoords.left >= selectedCoords.left &&
+//             componentCoords.right <= selectedCoords.right &&
+//             componentCoords.top >= selectedCoords.top &&
+//             componentCoords.bottom <= selectedCoords.bottom
+//         ) {
+//             componentsInRegion.push(coord.class); // Store the class of the component
+//         }
+//     });
+
+//     // Log components inside the selected region
+//     console.log('Components inside selected region:', componentsInRegion);
+
+//     // Update saved list dropdown to highlight components in the region
+//     var dropdownContent = document.getElementById("dropdownContent");
+//     var annotationsDiv = document.getElementById("annotations");
+//     annotationsDiv.innerHTML = ""; // Clear previous content
+//     componentsInRegion.forEach(function(component) {
+//         var componentDiv = document.createElement('div');
+//         componentDiv.textContent = component;
+//         componentDiv.style.color = 'yellow'; // Highlight color
+//         annotationsDiv.appendChild(componentDiv);
+//     });
+// // -----------------------------------------------------------------------------
         });
     }
 

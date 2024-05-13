@@ -81,6 +81,10 @@ button:hover {
     background-color: rgb(126, 94, 255) !important;
 }
 
+.button-used-select {
+    background-color: rgb(255, 117, 26,1)!important;
+}
+
 .highlight {
     border: 2px solid rgb(126, 94, 255);
 }
@@ -136,8 +140,8 @@ label{
 .dropbtn {
 background-color: #4CAF50;
 /* color: white; */
-padding: 8px;
-font-size: 16px;
+padding: 12px;
+font-size: 18px;
 border: none;
 cursor: pointer;
 }
@@ -147,16 +151,19 @@ position: relative;
 display: inline-block;
 }
 
-.dropdown-content {
-display: none;
-position: absolute;
-right: 0;
-border: 1px;
-min-width: 140px;
-box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-z-index: 1;
-}
 
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    border: 1px;
+    min-width: 140px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    max-height: 10 * (12 + 2)px; /* Height of 10 rows (each row 12px + 2px padding) */
+    overflow-y: auto;
+  }
+  
 
 
 .dropdown:hover .dropdown-content {
