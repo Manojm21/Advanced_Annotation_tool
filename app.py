@@ -290,8 +290,55 @@ def delete_annotations():
         return jsonify({'error': 'File not found', 'filename': filename})
 
 
+@app.route('/highlight_components', methods=['POST'])
+def highlight_components():
+    data = request.json
+    x, y, width, height = data.get('x'), data.get('y'), data.get('width'), data.get('height')
+    filename = data.get('filename')
+    selected_bbox = (x, y, width, height)
+    detected_classes = []
+    component_cache = {}
 
-    
+    labels_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'labels')
+    file_path = os.path.join(labels_dir, filename.split('.')[0] + ".txt")
+
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                existing_annotations = file.readlines()
+
+            for index, annotation in enumerate(existing_annotations):
+                annotation_data = annotation.strip().split()
+                class_id = int(annotation_data[0])
+                annotation_coords = list(map(float, annotation_data[1:]))  # Convert coords to floats
+                unique_id = f"C{index:03d}"  # Generate unique identifier
+
+                component_cache[unique_id] = {
+                    'class_id': class_id,
+                    'x': annotation_coords[0],
+                    'y': annotation_coords[1],
+                    'width': annotation_coords[2],
+                    'height': annotation_coords[3]
+                }
+
+                iou = calculate_iou(selected_bbox, annotation_coords)
+                threshold = 0
+                if iou > threshold:
+                    detected_classes.append({
+                        'id': unique_id,
+                        'class_id': class_id,
+                        'x': annotation_coords[0],
+                        'y': annotation_coords[1],
+                        'width': annotation_coords[2],
+                        'height': annotation_coords[3]
+                    })
+
+            
+            return jsonify(detected_classes)
+        else:
+            return jsonify({'error': 'File not found', 'filename': filename})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 
 if __name__ == '__main__':

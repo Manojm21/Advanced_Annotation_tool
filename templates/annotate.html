@@ -11,17 +11,21 @@
 <body>
     
 
-  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
-    <h1 style="margin: 0 auto;">Annotate Image</h1>
+  <div style="  align-items: center; padding: 10px;  display: inline-flex;justify-content: center;flex-wrap: wrap;
+  ">
+    <h1 style="margin: 0 auto; ">Annotate Image</h1>
     <div class="dropdown" style="display: inline-block; margin-left: 160px;">
         <button id="dropdownButton" class="dropbtn">Saved List &darr;</button>
-        <div id="dropdownContent" class="dropdown-content" style="display: none; max-height: 200px; overflow-y: auto; margin-left: 0px; background-color: rgb(25, 220, 103); text-align: left; padding: 2px;">
+        <div id="dropdownContent" class="dropdown-content" style="display: none; max-height: 200px; overflow-y: auto; margin-left: 0px; padding: 3px;
+        border-radius: 2px;
+        background-color:rgb(0 155 138);">
             <div id="annotations" style="color: white;"></div>
         </div>
     </div>
     <button onclick="window.location.reload();" style="
         padding: 5px 9px;
         margin-left: 15px;
+        background-color: rgb(0 155 138)
     ">
         <span id="reset-icon">&#8635;</span>
       </button>
@@ -97,7 +101,7 @@
         bl: true,
         mtr: false
       });
-      // Make the object selectable again for resizing
+     
       rect.selectable = false;
     
       canvas.renderAll();
@@ -105,9 +109,9 @@
 
 
     function resetAddClass() {
-    // Remove all options from the dropdown menu except the default one
+ 
     var classDropdown = document.getElementById('class-dropdown');
-    classDropdown.options.length = 10; // Assuming the first option is the default one
+    classDropdown.options.length = 10; 
 
     // Clear the classes stored in localStorage
     localStorage.removeItem('classes');
@@ -162,22 +166,20 @@ async function loadCanvas() {
         // Calculate scale to fit the image into the canvas
         var scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
 
-        // Calculate scaled dimensions
         var scaledWidth = img.width * scale;
         var scaledHeight = img.height * scale;
 
-        // Set canvas size to match the scaled image dimensions
         canvas.setDimensions({ width: scaledWidth, height: scaledHeight });
         console.log(canvas.width,canvas.height)
         // Set image scale and add it to the canvas
         img.set({
             scaleX: scale,
             scaleY: scale,
-            selectable: false // Make the image unselectable
+            selectable: false 
         });
         canvas.add(img);
 
-        // Center the image on the canvas
+        // To Center the image on the canvas
         img.center();
 
         var filename = "{{filename}}";
@@ -194,11 +196,10 @@ async function loadCanvas() {
               })
                 .then(response => response.json())
                 .then(data => {
-                    // Load the image onto the canvas
+                    // Loading the image onto the canvas
                     console.log("loading")
                   
                     console.log(data.annotations)
-                    // Draw rectangles for each annotation
                     data.annotations.forEach(annotation => {
                         var rect = new fabric.Rect({
                             left: annotation.x,
@@ -208,7 +209,7 @@ async function loadCanvas() {
                             stroke: 'rgba(41, 207, 244,0.6)',
                             strokeWidth: 0.4,
                             fill: 'rgba(41, 207, 244,0.4)',
-                            selectable: false  // Ensure bounding boxes are not selectable
+                            selectable: false  
                         });
                         canvas.add(rect);
                     });
@@ -228,15 +229,15 @@ async function loadCanvas() {
 
     function saveAnnotation() {
   var data = {
-    filename: "{{filename}}" + ".txt", // Replace "4.png" with the actual filename
+    filename: "{{filename}}" + ".txt", 
     annotations: annotations.map(function(annotation) {
       return {
-        x: annotation.annotation.x / zoomFactor, // Adjust X coordinate based on zoom
-        y: annotation.annotation.y / zoomFactor, // Adjust Y coordinate based on zoom
-        class: annotation.annotation.class,  // Add class property
+        x: annotation.annotation.x / zoomFactor, // Adjusting X coordinate based on the zoom
+        y: annotation.annotation.y / zoomFactor, // Adjusting Y coordinate based on zoom
+        class: annotation.annotation.class,  
         width: annotation.annotation.width,
         height: annotation.annotation.height,
-        // ... other annotation properties (if needed)
+       
       };
     })
   };
@@ -310,7 +311,7 @@ function addClass() {
           height: 0,
           stroke: 'rgba(41, 207, 244,0.6)',
           strokeWidth: 0.4,
-          fill: 'rgba(41, 207, 244,0.2)', // Transparent fill
+          fill: 'rgba(41, 207, 244,0.2)', 
           selectable: false,
           originX: 'left',
           originY: 'top'
@@ -334,16 +335,12 @@ function addClass() {
          console.log("check1112");
         var endPoint = canvas.getPointer(options.e);
         var rect = canvas.item(canvas.getObjects().length - 1);
-        
-        // Calculate width and height based on mouse position
+    
         var width = endPoint.x - rect.left;
         var height = endPoint.y - rect.top;
-        
-        // Ensure width and height are non-negative
         width = Math.max(width, 0);
         height = Math.max(height, 0);
-        
-        // Update rectangle properties
+   
         rect.set({
             width: width,
             height: height
@@ -374,7 +371,7 @@ function onMouseUp(options) {
         };
 
         annotations.push(annotationObject);
-        // document.getElementById('save-annotation-button').classList.add('button-used');
+        
     }
 }
 
@@ -497,7 +494,7 @@ var deleteMode = false; // Track delete annotation mode
 var isDrawingBox = false; // Track if drawing bounding box
 
 function deleteAnnotationsInBox() {
-    deleteMode = !deleteMode; // Toggle delete mode
+    deleteMode = !deleteMode; 
 
     if (deleteMode) {
         // Add event listeners for mouse events on canvas
@@ -511,8 +508,7 @@ function deleteAnnotationsInBox() {
         canvas.off('mouse:move', onMouseMoveDelete);
         canvas.off('mouse:up', onMouseUpDelete);
         document.getElementById('delete-annotation-button').classList.remove('button-used');
-        isDrawingBox = true; // Reset drawing box flag when delete mode is turned off
-    }
+        isDrawingBox = true; }
 }
 
 function onMouseDownDelete(options) {
@@ -525,7 +521,7 @@ function onMouseDownDelete(options) {
             top: startPoint.y,
             width: 0,
             height: 0,
-            fill: 'rgba(197, 66, 237, 0.35)', // Transparent fill
+            fill: 'rgba(197, 66, 237, 0.35)', 
             stroke: 'black',
             strokeWidth: 0.5,
             selectable: false
@@ -547,8 +543,7 @@ function onMouseMoveDelete(options) {
             strokeWidth: 0.5,
             selectable: false
         });
-        canvas.remove(boundingBox); // Remove previous box (if any)
-        canvas.add(box);
+        canvas.remove(boundingBox); 
         boundingBox = box;
         canvas.renderAll();
     }
@@ -593,10 +588,9 @@ function onMouseUpDelete(options) {
             console.log("Object removed");
         });
 
-        // Remove the bounding box
+      
         canvas.remove(boundingBox);
 
-        // Clear the annotations array
         console.log("check1",annotations.length)
         console.log("check1",annotationsToDelete.length)
         annotations = annotations.filter(function(annotation) {
@@ -758,46 +752,6 @@ function annotateSelectedRectangle() {
     });
     
 
- 
-function fetchAnnotations(filename) {
-    $.ajax({
-        type: 'POST',
-        url: '/fetch_annotations',
-        contentType: 'application/json',
-        data: JSON.stringify({ filename: filename }),
-        success: function(response) {
-            // Clear previous annotations
-            $('#annotations').empty();
-            
-            // Check if annotations exist
-            if (response.annotations.length > 0) {
-                // Create a list to hold the class names
-                var classList = document.createElement('ul');
-                classList.id = 'class-list';
-                // Remove bullets from the list
-                classList.style.listStyleType = 'none';
-                
-                // Iterate over annotations and add them as list items
-                response.annotations.forEach(function(annotation) {
-                    var listItem = document.createElement('li');
-                    var className = getClassFromLocalStorage(annotation.class);
-                    // Remove leading dot from class name, if present
-                    listItem.textContent = className;
-                    classList.appendChild(listItem);
-                });
-                
-                // Add the list to the dropdown content
-                $('#annotations').append(classList);
-            } else {
-                $('#annotations').text('No annotations found.');
-            }
-        },
-        error: function(error) {
-            console.error('Error fetching annotations:', error);
-        }
-    });
-}
-
 
 function getClassFromLocalStorage(classNumber) {
     var classes = JSON.parse(localStorage.getItem('classes')) || [];
@@ -826,104 +780,182 @@ function getClassFromLocalStorage(classNumber) {
 
 
 
-// Call fetchAnnotations function with the filename
+
+function onMouseDownSelectRegion(event) {
+    if (selectedRegion) {
+        canvas.remove(selectedRegion);
+    }
+    var startPointRegion = canvas.getPointer(event.e);
+    selectedRegion = new fabric.Rect({
+        left: startPointRegion.x,
+        top: startPointRegion.y,
+        width: 0,
+        height: 0,
+        stroke: 'rgb(255, 117, 26)',
+        strokeWidth: 0.4,
+        fill: 'rgb(255, 117, 26,0.34)',
+        selectable: false,
+        originX: 'left',
+        originY: 'top'
+    });
+    canvas.add(selectedRegion);
+
+    canvas.on('mouse:move', function(event) {
+        var endPointRegion = canvas.getPointer(event.e);
+        selectedRegion.set({
+            width: endPointRegion.x - startPointRegion.x,
+            height: endPointRegion.y - startPointRegion.y
+        });
+        canvas.renderAll();
+    });
+
+    canvas.on('mouse:up', onMouseUpSelectRegion);
+}
 $(document).ready(function() {
     var filename = "{{filename}}";
     fetchAnnotations(filename);
 });
 
-
-
-    // JavaScript function to toggle region selection mode
-    function toggleRegionSelection() {
-        regionSelectionMode = !regionSelectionMode;
-        if (regionSelectionMode) {
-            
-            disableZoom();
-            canvas.defaultCursor = 'crosshair';
-            canvas.selection = false; // Disable object selection on canvas
-            canvas.on('mouse:down', onMouseDownSelectRegion);
-        } else {
-            canvas.defaultCursor = 'default';
-            canvas.selection = true; // Enable object selection on canvas
-            canvas.off('mouse:down', onMouseDownSelectRegion);
-            if (selectedRegion) {
-                canvas.remove(selectedRegion);
-                selectedRegion = null;
-            }
-        }
-        document.getElementById('select-region-button').classList.toggle('button-used-select')
-        
-    }
-
-    // Function to handle mouse down event for region selection
-    function onMouseDownSelectRegion(event) {
+function toggleRegionSelection() {
+    regionSelectionMode = !regionSelectionMode;
+    if (regionSelectionMode) {
+        disableZoom();
+        canvas.defaultCursor = 'crosshair';
+        canvas.selection = false; 
+        canvas.on('mouse:down', onMouseDownSelectRegion);
+    } else {
+        canvas.defaultCursor = 'default';
+        canvas.selection = true; 
+        canvas.off('mouse:down', onMouseDownSelectRegion);
         if (selectedRegion) {
-            canvas.remove(selectedRegion);
-        }
-        var startPointRegion = canvas.getPointer(event.e);
-        selectedRegion = new fabric.Rect({
-            left: startPointRegion.x,
-            top: startPointRegion.y,
-            width: 0,
-            height: 0,
-            stroke: 'rgb(255, 117, 26)',
-            strokeWidth: 0.4,
-            fill: 'rgb(255, 117, 26,0.34)', // Transparent fill
-            selectable: false,
-            originX: 'left',
-            originY: 'top'
-        });
-        canvas.add(selectedRegion);
-
-        canvas.on('mouse:move', function(event) {
-            var endPointRegion = canvas.getPointer(event.e);
-            selectedRegion.set({
-                width: endPointRegion.x - startPointRegion.x,
-                height: endPointRegion.y - startPointRegion.y
-            });
-            canvas.renderAll();
-        });
-
-        canvas.on('mouse:up', function(event) {
-            canvas.off('mouse:move');
-            canvas.off('mouse:up');
-            canvas.selection = true; // Enable object selection after region selection
-            selectedRegion.setCoords();
-            // Log coordinates to console
-            console.log('Selected Region Coordinates:');
-            console.log('Left:', selectedRegion.left);
-            console.log('Top:', selectedRegion.top);
-            console.log('Width:', selectedRegion.width);
-            console.log('Height:', selectedRegion.height);
-
-
-        });
-    }
-
-   
-
-    // Add click event listener to remove selected region if clicked outside
-    document.addEventListener('click', function(event) {
-        var target = event.target;
-        if (!regionSelectionMode && selectedRegion && !canvas.containsPoint(target, selectedRegion)) {
             canvas.remove(selectedRegion);
             selectedRegion = null;
         }
-    });
+    }
+    document.getElementById('select-region-button').classList.toggle('button-used-select');
+}
+
+function onMouseUpSelectRegion(event) {
+    canvas.off('mouse:move');
+    canvas.off('mouse:up');
+    canvas.selection = true; 
+    selectedRegion.setCoords();
+
+    var x = selectedRegion.left;
+    var y = selectedRegion.top;
+    var width = selectedRegion.width;
+    var height = selectedRegion.height;
+    var filename = "{{filename}}";
   
+    var data = {
+        filename: filename,
+        x: x,
+        y: y,
+        width: width,
+        height: height
+    };
+
+   
+    
+    fetch('/highlight_components', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        highlightComponents(data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while sending coordinates to the backend.');
+    });
+}
+
+function fetchAnnotations(filename) {
+    $.ajax({
+        type: 'POST',
+        url: '/fetch_annotations',
+        contentType: 'application/json',
+        data: JSON.stringify({ filename: filename }),
+        success: function(response) {
+            // to Clear previous annotations
+            $('#annotations').empty();
+            
+            // to Check if annotations exist
+            if (response.annotations.length > 0) {
+                var classList = document.createElement('ul');
+                classList.id = 'class-list';
+                classList.style.listStyleType = 'none';
+                response.annotations.forEach(function(annotation, index) {
+    var listItem = document.createElement('li');
+    var className = getClassFromLocalStorage(annotation.class);
+    var uniqueId = `C${String(index).padStart(3, '0')}`; 
+    listItem.textContent = `${className} (${uniqueId})`;
+    listItem.className = uniqueId; 
+    classList.appendChild(listItem);
+});
+
+                $('#annotations').append(classList);
+            } else {
+                $('#annotations').text('No annotations found.');
+            }
+        },
+        error: function(error) {
+            console.error('Error fetching annotations:', error);
+        }
+    });
+}
+
+function highlightComponents(data) {
+    $('.highlighted-component').removeClass('highlighted-component');
+
+    if (data.length > 0) {
+        data.forEach(function(component) {
+            var uniqueId = component.id;
+            console.log('Selected unique ID:', uniqueId);
+            var elementsToHighlight = $(`.${uniqueId}`);
+            elementsToHighlight.addClass('highlighted-component');
+        });
+    } else {
+        console.log("No classes detected");
+    }
+
+    highlightClassNamesInList(data);
+}
+
+function highlightClassNamesInList(data) {
+    // Clearing previous highlights
+    $('#class-list li').css('background-color', '');
+
+    if (data.length > 0) {
+        data.forEach(function(component) {
+            var uniqueId = component.id;
+            $(`#class-list li.${uniqueId}`).css('background-color', '#ff9a0c');
+        });
+    }
+}
 
 
-  document.getElementById("dropdownButton").addEventListener("click", function() {
-      var dropdownContent = document.getElementById("dropdownContent");
-      if (dropdownContent.style.display === "none") {
-          dropdownContent.style.display = "block";
-      } else {
-          dropdownContent.style.display = "none";
-      }
-  });
+document.getElementById("dropdownButton").addEventListener("click", function() {
+    var dropdownContent = document.getElementById("dropdownContent");
+    if (dropdownContent.style.display === "none") {
+        dropdownContent.style.display = "block";
+    } else {
+        dropdownContent.style.display = "none";
+    }
+});
 
-
+document.addEventListener('click', function(event) {
+    var target = event.target;
+    if (!regionSelectionMode && selectedRegion && !canvas.containsPoint(target, selectedRegion)) {
+        canvas.remove(selectedRegion);
+        selectedRegion = null;
+    }
+});
 
 
   </script>
