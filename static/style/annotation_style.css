@@ -103,6 +103,22 @@ h1{
     outline: none;
     font-family: cursive;
 }
+
+.image-icon {
+    width: 80px;
+    cursor: pointer;
+    position: absolute;
+    left:80px;
+    padding-right: 4px;
+    transition: transform 0.3s ease; /* Smooth transition */
+    mix-blend-mode: multiply;
+}
+
+.image-icon:hover {
+    transform: scale(1.05); /* Scale up slightly on hover*/
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Increase shadow on hover */
+}
+
 label{
   color:rgb(0 155 138);
   transition: background-color 0.3s ease, transform 0.3s ease;
