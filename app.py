@@ -32,15 +32,48 @@ def upload_file():
         # Ensure that the 'images' directory exists, create it if it doesn't
         if not os.path.exists(images_folder):
             os.makedirs(images_folder)
-        # Assuming filename is the name of the uploaded file
+
+        # Check if the filename already exists and append suffix if it does
         file_path = os.path.join(images_folder, filename)
+        if os.path.exists(file_path):
+            base, ext = os.path.splitext(filename)
+            counter = 1
+            while os.path.exists(file_path):
+                filename = f"{base}_{counter}{ext}"
+                file_path = os.path.join(images_folder, filename)
+                counter += 1
 
-
+        # Save the file
         file.save(file_path)
 
         return redirect(url_for('annotate_image', filename=filename))
 
     return render_template('index.html', error='Upload failed')
+
+# @app.route('/upload', methods=['POST'])
+# def upload_file():
+#     if 'file' not in request.files:
+#         return render_template('index.html', error='No file part')
+#     file = request.files['file']
+#     if file.filename == '':
+#         return render_template('index.html', error='No selected file')
+
+#     if file:
+#         filename = file.filename
+                
+#         images_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'images')
+#         # Ensure that the 'images' directory exists, create it if it doesn't
+#         if not os.path.exists(images_folder):
+#             os.makedirs(images_folder)
+#         # Assuming filename is the name of the uploaded file
+#         file_path = os.path.join(images_folder, filename)
+
+
+#         file.save(file_path)
+
+#         return redirect(url_for('annotate_image', filename=filename))
+
+#     return render_template('index.html', error='Upload failed')
 
 @app.route('/annotate/<filename>')
 def annotate_image(filename):

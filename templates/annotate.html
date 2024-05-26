@@ -948,7 +948,17 @@ function highlightClassNamesInList(data) {
     }
 }
 
-
+document.addEventListener('DOMContentLoaded', function() {
+            var dropdownButton = document.getElementById('dropdownButton');
+            dropdownButton.addEventListener('click', function() {
+                if (dropdownButton.innerHTML.includes('↓')) {
+                    dropdownButton.innerHTML = 'Saved List &uarr;';
+                } else {
+                    dropdownButton.innerHTML = 'Saved List &darr;';
+                }
+            });
+        });
+        
 document.getElementById("dropdownButton").addEventListener("click", function() {
     var dropdownContent = document.getElementById("dropdownContent");
     if (dropdownContent.style.display === "none") {
