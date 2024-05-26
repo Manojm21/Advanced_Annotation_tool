@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Annotate Image</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="../static/style/annotation_style.css">
  
 </head>
@@ -230,7 +231,20 @@ async function loadCanvas() {
 }
 
 
-
+function showCustomAlert(textDisplay) {
+            Swal.fire({
+                title: 'alert!',
+                text: textDisplay,
+                timer: 1000,
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+                willClose: () => {
+                    // Perform any cleanup or additional actions here
+                }
+            });
+        }
 
    
 
@@ -262,9 +276,11 @@ async function loadCanvas() {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      alert('Annotation file saved successfully!');
+      // alert('Annotation file saved successfully!');
+      showCustomAlert('Annotation file saved successfully!');
     } else {
-      alert('Failed to save annotation file!');
+      // alert('Failed to save annotation file!');
+      showCustomAlert('Failed to save annotation file!');
     }
   })
   .catch(error => {
@@ -745,10 +761,12 @@ function annotateSelectedRectangle() {
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('An error occurred while annotating the rectangle.');
+          // alert('An error occurred while annotating the rectangle.');
+          showCustomAlert('An error occurred while annotating the rectangle.');
         });
       } else {
-        alert('Please select a rectangle to annotate.');
+        // alert('Please select a rectangle to annotate.');
+        showCustomAlert('Please select a rectangle to annotate.')
       }
     }
 
@@ -880,7 +898,8 @@ function onMouseUpSelectRegion(event) {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while sending coordinates to the backend.');
+        // alert('An error occurred while sending coordinates to the backend.');
+        showCustomAlert('An error occurred while sending coordinates to the backend.');
     });
 }
 
