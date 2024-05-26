@@ -33,20 +33,28 @@ def upload_file():
         if not os.path.exists(images_folder):
             os.makedirs(images_folder)
 
-        # Check if the filename already exists and append suffix if it does
         file_path = os.path.join(images_folder, filename)
-        if os.path.exists(file_path):
-            base, ext = os.path.splitext(filename)
-            counter = 1
-            while os.path.exists(file_path):
-                filename = f"{base}_{counter}{ext}"
-                file_path = os.path.join(images_folder, filename)
-                counter += 1
+        base, ext = os.path.splitext(filename)
+        unique_filename = f"{base}_{uuid.uuid4().hex}{ext}"
+        if not os.path.exists(file_path):
+            file_path = os.path.join(images_folder, unique_filename)
+        else:
+            unique_filename=filename
+
+        # Check if the filename already exists and append suffix if it does
+        # file_path = os.path.join(images_folder, filename)
+        # if os.path.exists(file_path):
+        #     base, ext = os.path.splitext(filename)
+        #     counter = 1
+        #     while os.path.exists(file_path):
+        #         filename = f"{base}_{counter}{ext}"
+        #         file_path = os.path.join(images_folder, filename)
+        #         counter += 1
 
         # Save the file
         file.save(file_path)
 
-        return redirect(url_for('annotate_image', filename=filename))
+        return redirect(url_for('annotate_image', filename=unique_filename))
 
     return render_template('index.html', error='Upload failed')
 
@@ -91,8 +99,12 @@ def save_annotation():
         labels_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'labels')  # Directory to save labels
         if not os.path.exists(labels_dir):
             os.makedirs(labels_dir)
+
+        base, ext = os.path.splitext(filename)
+        unique_filename = f"{base}_{uuid.uuid4().hex}{ext}"
         
-        save_path = os.path.join(labels_dir, filename.split('.')[0] + '.txt')
+        # save_path = os.path.join(labels_dir, filename.split('.')[0] + '.txt')
+        save_path = os.path.join(labels_dir, unique_filename.split('.')[0] + '.txt')
 
         existing_bboxes = []  # List to store existing bounding boxes
         semi_existing_bboxes = [] 
