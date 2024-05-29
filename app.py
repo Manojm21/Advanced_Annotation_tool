@@ -363,6 +363,7 @@ def highlight_components():
             for index, annotation in enumerate(existing_annotations):
                 annotation_data = annotation.strip().split()
                 class_id = int(annotation_data[0])
+                print("ssjhs",class_id)
                 annotation_coords = list(map(float, annotation_data[1:]))  # Convert coords to floats
                 unique_id = f"C{index:03d}"  # Generate unique identifier
 
@@ -392,7 +393,45 @@ def highlight_components():
             return jsonify({'error': 'File not found', 'filename': filename})
     except Exception as e:
         return jsonify({'error': str(e)})
+    
+@app.route('/add_class', methods=['POST'])
+def add_class():
+    new_class = request.json.get('newClass').strip()
+    class_file = os.path.join(os.path.dirname(__file__), 'class_label_dict.json')
+    
+    # Load existing class-label dictionary
+    with open(class_file, 'r') as file:
+        class_dict = json.load(file)
+    
+    # Check if the class already exists
+    if new_class in class_dict:
+        return jsonify({"message": "Class already exists"}), 400
 
+    # Add new class with the next available ID
+    new_id = max(class_dict.values()) + 1
+    class_dict[new_class] = new_id
+    
+    # Update the JSON file
+    with open(class_file, 'w') as file:
+        json.dump(class_dict, file)
+    
+    return jsonify({"message": "Class added successfully", "newClass": new_class, "newId": new_id}), 200
+
+@app.route('/set_options', methods=['POST'])
+def set_options():
+    # new_class = request.json.get('newClass').strip()
+    class_file = os.path.join(os.path.dirname(__file__), 'class_label_dict.json')
+    
+    # Load existing class-label dictionary
+    with open(class_file, 'r') as file:
+        class_dict = json.load(file)
+    
+    # Check if the class already exists
+    classes=[]
+    for className in class_dict:
+        classes.append(className)
+    
+    return jsonify({"message": "Classes added successfully", "classes": classes}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

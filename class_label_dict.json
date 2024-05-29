@@ -1,1 +1,1 @@
-{"server": 1, " switch": 2, "firewall": 3, "workstation": 4, "controller": 5, "internet": 6, "printer": 7, "other": 8, "router": 9, "storage_device": 10}
+{"server": 1, " switch": 2, "firewall": 3, "workstation": 4, "controller": 5, "internet": 6, "printer": 7, "router": 8, "storage_device": 9, "scanner": 10, "i/o device": 11, "oled display": 12}

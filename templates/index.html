@@ -1,63 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Upload Image</title>
-   <link rel="stylesheet" href="../static/style/index_style.css">
-  
-</head>
-<body>
-   <div class="container">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Image</title>
+    <link rel="stylesheet" href="../static/style/index_style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div
+        class="image-icon-container"
+        id="trigger-image"
+        onclick="document.getElementById('file').click()"
+      >
+        <span><h1>ABB ANNOTATION TOOL</h1></span>
+        <img
+          src="/static/upload_icon.png"
+          alt="Upload Icon"
+          class="image-icon"
+        />
+        <br />
+        <span id="trigger-text">Choose File For Annotation</span>
+      </div>
 
-       <div class="image-icon-container" id="trigger-image" onclick="document.getElementById('file').click()">
-           <span><h1>ABB ANNOTATION TOOL</h1></span>
-           <img src="/static/upload_icon.png" alt="Upload Icon" class="image-icon">
-           <br>
-           <span id="trigger-text">Choose File For Annotation</span>
-       </div>
+      <div class="image-preview-container" id="image-preview-container">
+        <span><h1>PREVIEW IMAGE</h1></span>
+        <img
+          src="#"
+          alt="Image Preview"
+          class="image-preview"
+          id="image-preview"
+        />
+        <div class="image-name" id="image-name"></div>
+      </div>
 
-       <div class="image-preview-container" id="image-preview-container">
-           <span><h1>PREVIEW IMAGE</h1></span>
-           <img src="#" alt="Image Preview" class="image-preview" id="image-preview">
-           <div class="image-name" id="image-name"></div>
-       </div>
+      <form
+        action="/upload"
+        method="post"
+        enctype="multipart/form-data"
+        id="upload-form"
+        style="display: none"
+      >
+        <input type="file" name="file" id="file" style="display: none" />
+        <button type="submit" class="upload-button">Upload</button>
+      </form>
 
-       <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form" style="display: none;">
-           <input type="file" name="file" id="file" style="display: none;">
-           <button type="submit" class="upload-button">Upload</button>
-       </form>
+      <p id="error-message"></p>
+    </div>
 
+    <script>
+      document.getElementById("file").addEventListener("change", function () {
+        var file = this.files[0];
 
-       <p id="error-message"></p>
-   </div>
+        if (file) {
+          // Show image preview
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            document
+              .getElementById("image-preview")
+              .setAttribute("src", e.target.result);
+            document.getElementById("image-preview-container").style.display =
+              "block";
+            document.getElementById("trigger-image").style.display = "none";
+            document.getElementById("upload-preview-button").style.display =
+              "block";
+          };
+          reader.readAsDataURL(file);
 
-   <script>
-       document.getElementById('file').addEventListener('change', function() {
-           var file = this.files[0];
-           
-           if (file) {
-               // Show image preview
-               var reader = new FileReader();
-               reader.onload = function(e) {
-                   document.getElementById('image-preview').setAttribute('src', e.target.result);
-                   document.getElementById('image-preview-container').style.display = 'block';
-                   document.getElementById('trigger-image').style.display = 'none';
-                   document.getElementById('upload-preview-button').style.display = 'block';
-               }
-               reader.readAsDataURL(file);
+          // Display file name
+          document.getElementById("image-name").innerText =
+            "Selected Image: " + file.name;
 
-               // Display file name
-               document.getElementById('image-name').innerText = 'Selected Image: ' + file.name;
-
-               // Show upload form
-               document.getElementById('upload-form').style.display = 'block';
-           } else {
-               // Handle case where no file is selected
-               document.getElementById('error-message').innerText = 'No file selected.';
-               document.getElementById('error-message').style.display = 'block';
-           }
-       });
-   </script>
-</body>
+          // Show upload form
+          document.getElementById("upload-form").style.display = "block";
+        } else {
+          // Handle case where no file is selected
+          document.getElementById("error-message").innerText =
+            "No file selected.";
+          document.getElementById("error-message").style.display = "block";
+        }
+      });
+    </script>
+  </body>
 </html>
