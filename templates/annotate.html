@@ -1131,104 +1131,162 @@
           });
       }
 
-      function fetchAnnotations(filename) {
-        $.ajax({
-          type: "POST",
-          url: "/fetch_annotations",
-          contentType: "application/json",
-          data: JSON.stringify({ filename: filename }),
-          success: function (response) {
-            // to Clear previous annotations
-            $("#annotations").empty();
 
-            // to Check if annotations exist
+var currentHighlightRect = null;
+
+function fetchAnnotations(filename) {
+    $.ajax({
+        type: 'POST',
+        url: '/fetch_annotations',
+        contentType: 'application/json',
+        data: JSON.stringify({ filename: filename }),
+        success: function(response) {
+            // Clear previous annotations
+            $('#annotations').empty();
+
+            // Check if annotations exist
             if (response.annotations.length > 0) {
-              var classList = document.createElement("ul");
-              classList.id = "class-list";
-              classList.style.listStyleType = "none";
-              response.annotations.forEach(function (annotation, index) {
-                var listItem = document.createElement("li");
-                console.log(annotation.class);
-                var className = getClassFromLocalStorage(annotation.class);
-                var uniqueId = `C${String(index).padStart(3, "0")}`;
-                listItem.textContent = `${className} (${uniqueId})`;
-                listItem.className = uniqueId;
-                classList.appendChild(listItem);
-              });
+                var classList = document.createElement('ul');
+                classList.id = 'class-list';
+                classList.style.listStyleType = 'none';
+                response.annotations.forEach(function(annotation, index) {
+                    var listItem = document.createElement('li');
+                    var className = getClassFromLocalStorage(annotation.class);
+                    var uniqueId = `C${String(index).padStart(3, '0')}`;
+                    listItem.textContent = `${className} (${uniqueId})`;
+                    listItem.className = uniqueId;
+                    listItem.style.cursor = 'pointer'; // Add pointer cursor
+                    listItem.dataset.x = annotation.x;
+                    listItem.dataset.y = annotation.y;
+                    listItem.dataset.width = annotation.width;
+                    listItem.dataset.height = annotation.height;
+                    classList.appendChild(listItem);
+                });
 
-              $("#annotations").append(classList);
+                $('#annotations').append(classList);
+
+                // Attach click event listener to each list item
+                $('#class-list li').on('click', function() {
+                    var uniqueId = $(this).attr('class');
+
+                    // Remove highlight from all elements
+                    $('.highlighted-component').removeClass('highlighted-component');
+
+                    // Add highlight to the selected elements
+                    var elementsToHighlight = $(`.${uniqueId}`);
+                    elementsToHighlight.addClass('highlighted-component');
+
+                    // Remove highlight color from all list items
+                    $('#class-list li').css('background-color', '');
+
+                    // Add highlight color to the clicked list item
+                    $(this).css('background-color', '#ff9a0c');
+
+                    // Highlight the component on the canvas
+                    var x = $(this).data('x');
+                    var y = $(this).data('y');
+                    var width = $(this).data('width');
+                    var height = $(this).data('height');
+                    highlightCanvasComponent(x, y, width, height);
+                });
             } else {
-              $("#annotations").text("No annotations found.");
+                $('#annotations').text('No annotations found.');
             }
-          },
-          error: function (error) {
-            console.error("Error fetching annotations:", error);
-          },
-        });
-      }
+        },
+        error: function(error) {
+            console.error('Error fetching annotations:', error);
+        }
+    });
+}
 
-      function highlightComponents(data) {
-        $(".highlighted-component").removeClass("highlighted-component");
+function highlightCanvasComponent(x, y, width, height) {
+    // Clear previous highlight
+    if (currentHighlightRect) {
+        canvas.remove(currentHighlightRect);
+        currentHighlightRect = null;
+    }
 
-        if (data.length > 0) {
-          data.forEach(function (component) {
+    // Draw a rectangle to highlight the component
+    var rect = new fabric.Rect({
+        left: x,
+        top: y,
+        width: width,
+        height: height,
+        stroke: 'rgb(255, 117, 26)',
+        strokeWidth: 2,
+        fill: 'rgba(255, 117, 26, 0.4)', // Transparent highlight fill
+        selectable: false,
+        originX: 'left',
+        originY: 'top'
+    });
+
+    canvas.add(rect);
+    canvas.renderAll();
+
+    // Update the global variable to store the current highlight rectangle
+    currentHighlightRect = rect;
+}
+
+
+function highlightComponents(data) {
+    $('.highlighted-component').removeClass('highlighted-component');
+
+    if (data.length > 0) {
+        data.forEach(function(component) {
             var uniqueId = component.id;
-            console.log("Selected unique ID:", uniqueId);
+            console.log('Selected unique ID:', uniqueId);
             var elementsToHighlight = $(`.${uniqueId}`);
-            elementsToHighlight.addClass("highlighted-component");
-          });
-        } else {
-          console.log("No classes detected");
-        }
+            elementsToHighlight.addClass('highlighted-component');
+        });
+    } else {
+        console.log("No classes detected");
+    }
 
-        highlightClassNamesInList(data);
-      }
+    highlightClassNamesInList(data);
+}
 
-      function highlightClassNamesInList(data) {
-        // Clearing previous highlights
-        $("#class-list li").css("background-color", "");
+function highlightClassNamesInList(data) {
+    // Clearing previous highlights
+    $('#class-list li').css('background-color', '');
 
-        if (data.length > 0) {
-          data.forEach(function (component) {
+    if (data.length > 0) {
+        data.forEach(function(component) {
             var uniqueId = component.id;
-            $(`#class-list li.${uniqueId}`).css("background-color", "#ff9a0c");
-          });
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-        var dropdownButton = document.getElementById("dropdownButton");
-        dropdownButton.addEventListener("click", function () {
-          if (dropdownButton.innerHTML.includes("↓")) {
-            dropdownButton.innerHTML = "Saved List &uarr;";
-          } else {
-            dropdownButton.innerHTML = "Saved List &darr;";
-          }
+            $(`#class-list li.${uniqueId}`).css('background-color', '#ff9a0c');
         });
-      });
+    }
+}
 
-      document
-        .getElementById("dropdownButton")
-        .addEventListener("click", function () {
-          var dropdownContent = document.getElementById("dropdownContent");
-          if (dropdownContent.style.display === "none") {
+
+document.addEventListener('DOMContentLoaded', function() {
+    var dropdownButton = document.getElementById('dropdownButton');
+    dropdownButton.addEventListener('click', function() {
+        if (dropdownButton.innerHTML.includes('↓')) {
+            dropdownButton.innerHTML = 'Saved List &uarr;';
+        } else {
+            dropdownButton.innerHTML = 'Saved List &darr;';
+        }
+    });
+
+    document.getElementById("dropdownButton").addEventListener("click", function() {
+        var dropdownContent = document.getElementById("dropdownContent");
+        if (dropdownContent.style.display === "none") {
             dropdownContent.style.display = "block";
-          } else {
+        } else {
             dropdownContent.style.display = "none";
-          }
-        });
-
-      document.addEventListener("click", function (event) {
-        var target = event.target;
-        if (
-          !regionSelectionMode &&
-          selectedRegion &&
-          !canvas.containsPoint(target, selectedRegion)
-        ) {
-          canvas.remove(selectedRegion);
-          selectedRegion = null;
         }
-      });
-    </script>
-  </body>
+    });
+
+    document.addEventListener('click', function(event) {
+        var target = event.target;
+        if (!regionSelectionMode && selectedRegion && !canvas.containsPoint(target, selectedRegion)) {
+            canvas.remove(selectedRegion);
+            selectedRegion = null;
+        }
+    });
+});
+
+
+  </script>
+</body>
 </html>
